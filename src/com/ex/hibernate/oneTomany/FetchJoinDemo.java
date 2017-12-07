@@ -3,13 +3,14 @@ package com.ex.hibernate.oneTomany;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.query.Query;
 
 import com.ex.hibernate.oneTomany.entity.Course;
 import com.ex.hibernate.oneTomany.entity.Instructor;
 import com.ex.hibernate.oneTomany.entity.InstructorDetail;
 
 
-public class EagerLazyDemo {
+public class FetchJoinDemo {
 
 	public static void main(String[] args) {
 
@@ -28,14 +29,23 @@ public class EagerLazyDemo {
 			// start a transaction
 			session.beginTransaction();
 
+			// option 2 : Hibernate query with HQL
+			
 			// get the instructor from db
 			int theId = 1;
-			Instructor tempInstructor = session.get(Instructor.class, theId);
+
+			Query<Instructor> query = session.createQuery("select i from Instructor i "
+					+ "JOIN FETCH i.courses "
+					+ "where i.id=:theInstructorId",
+					Instructor.class);
+			
+			query.setParameter("theInstructorId", theId);
+			
+			// execute query and get instructor
+			Instructor tempInstructor = query.getSingleResult();
 			
 			System.out.println("Instructor: "+tempInstructor);
 			
-			System.out.println("Courses: "+tempInstructor.getCourses());
-
 			// commit transaction
 			session.getTransaction().commit();
 			
@@ -43,7 +53,6 @@ public class EagerLazyDemo {
 			session.close();
 			
 			System.out.println("The session is now closed");
-			// option 1: call getter method while session is open
 			
 			// get courses for the instructor
 			System.out.println("Courses: "+tempInstructor.getCourses());
